@@ -55,7 +55,12 @@ ENV NODE_ENV=production
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates \
+    git \
+    curl \
   && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
 
 WORKDIR /app
 
@@ -76,4 +81,4 @@ COPY src ./src
 ENV OPENCLAW_PUBLIC_PORT=8080
 ENV PORT=8080
 EXPOSE 8080
-CMD ["node", "src/server.js"]
+CMD ["sh", "-c", "test -f /data/startup.sh && bash /data/startup.sh; exec node src/server.js"]
