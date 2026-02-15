@@ -41,15 +41,11 @@ ENV OPENCLAW_PREFER_PNPM=1
 # the gateway API still functions without the control UI.
 RUN pnpm ui:install && (pnpm ui:build || echo '[WARN] ui:build failed; gateway control UI will not be available')
 
-# Prune dev dependencies and build artifacts to shrink the final image.
-# Only dist/, production node_modules, and package.json files are needed at runtime.
-RUN pnpm prune --prod 2>/dev/null || true \
-  && rm -rf .git .cache .turbo .bun \
-    src/ apps/ docs/ scripts/ benchmarks/ \
-    **/.turbo **/tsconfig*.json **/vitest*.config* \
-    **/jest.config* **/.eslint* **/.prettier* \
-  && find . -name '*.map' -delete 2>/dev/null || true \
-  && find . -name '*.d.ts' -not -path '*/dist/*' -delete 2>/dev/null || true
+# Clean up build-only artifacts to shrink the image.
+# Be conservative — openclaw loads templates and other files at runtime
+# (e.g. docs/reference/templates/), so only remove what's clearly safe.
+RUN rm -rf .git .cache .turbo .bun benchmarks/ \
+  && find . -name '*.map' -delete 2>/dev/null || true
 
 
 # Runtime image — use slim variant to save ~300MB
