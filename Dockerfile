@@ -35,7 +35,11 @@ RUN set -eux; \
 RUN pnpm install --no-frozen-lockfile
 RUN pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
-RUN pnpm ui:install && pnpm ui:build
+# The UI build may fail on some openclaw refs due to node:module being
+# imported into a Vite browser bundle (createRequire not available).
+# Make it non-fatal — the wrapper /setup page works independently, and
+# the gateway API still functions without the control UI.
+RUN pnpm ui:install && (pnpm ui:build || echo '[WARN] ui:build failed; gateway control UI will not be available')
 
 
 # Runtime image
