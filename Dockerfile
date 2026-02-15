@@ -57,6 +57,7 @@ RUN apt-get update \
     ca-certificates \
     git \
     curl \
+    unzip \
   && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL https://bun.sh/install | bash
