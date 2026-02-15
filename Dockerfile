@@ -43,7 +43,7 @@ RUN pnpm ui:install && (pnpm ui:build || echo '[WARN] ui:build failed; gateway c
 
 # Prune dev dependencies and build artifacts to shrink the final image.
 # Only dist/, production node_modules, and package.json files are needed at runtime.
-RUN pnpm prune --prod --no-optional 2>/dev/null || true \
+RUN pnpm prune --prod 2>/dev/null || true \
   && rm -rf .git .cache .turbo .bun \
     src/ apps/ docs/ scripts/ benchmarks/ \
     **/.turbo **/tsconfig*.json **/vitest*.config* \
