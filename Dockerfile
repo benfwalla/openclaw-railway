@@ -41,9 +41,19 @@ ENV OPENCLAW_PREFER_PNPM=1
 # the gateway API still functions without the control UI.
 RUN pnpm ui:install && (pnpm ui:build || echo '[WARN] ui:build failed; gateway control UI will not be available')
 
+# Prune dev dependencies and build artifacts to shrink the final image.
+# Only dist/, production node_modules, and package.json files are needed at runtime.
+RUN pnpm prune --prod --no-optional 2>/dev/null || true \
+  && rm -rf .git .cache .turbo .bun \
+    src/ apps/ docs/ scripts/ benchmarks/ \
+    **/.turbo **/tsconfig*.json **/vitest*.config* \
+    **/jest.config* **/.eslint* **/.prettier* \
+  && find . -name '*.map' -delete 2>/dev/null || true \
+  && find . -name '*.d.ts' -not -path '*/dist/*' -delete 2>/dev/null || true
 
-# Runtime image
-FROM node:22-bookworm
+
+# Runtime image — use slim variant to save ~300MB
+FROM node:22-bookworm-slim
 ENV NODE_ENV=production
 
 RUN apt-get update \
@@ -57,7 +67,7 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev && npm cache clean --force
 
-# Copy built openclaw
+# Copy built openclaw (already pruned in build stage)
 COPY --from=openclaw-build /openclaw /openclaw
 
 # Provide an openclaw executable
